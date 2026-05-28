@@ -993,7 +993,7 @@ function renderChaptersLayoutList() {
     
     item.innerHTML = `
       <div class="chapter-num-badge">Ch ${index + 1}</div>
-      <input type="text" class="chapter-title-field" value="${escapeHTML(ch.title || '')}" placeholder="Enter chapter title node reference..." onchange="updateChapterTitleFromList('${ch.id}', this.value)" />
+      <input type="text" class="chapter-title-field" value="${escapeHTML(ch.title || '')}" placeholder="Enter chapter title node reference..." oninput="updateChapterTitleFromList('${ch.id}', this.value)" />
       <span class="status-badge ${badgeClass}" onclick="cycleChapterStatusDirectly('${ch.id}')">${ch.status || 'Planned'}</span>
       <div class="chapter-actions">
         <button class="icon-btn" onclick="navigateToChapterEditorDirectly('${ch.id}')" title="Open inside writer node element workspace">
@@ -1209,13 +1209,13 @@ function renderActsLayoutGrid() {
       <div class="act-card-header">
         <div class="act-header">
           <span class="act-num">Block ${idx + 1}</span>
-          <input type="text" class="act-title-input" value="${escapeHTML(act.label || '')}" placeholder="Plot Blueprint" onchange="updateActPropertyNode('${act.id}','label',this.value)" />
+          <input type="text" class="act-title-input" value="${escapeHTML(act.label || '')}" placeholder="Plot Blueprint" oninput="updateActPropertyNode('${act.id}','label',this.value)" />
         </div>
         <button class="icon-btn del" onclick="deleteActNodeBlock('${act.id}')" title="Erase act alignment blueprint structure">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>
       </div>
-      <div class="field"><label>Core Climax Event Node / Narrative Shift Turning Metric Objective</label><textarea style="min-height:60px" placeholder="Describe the progression turning benchmarks required to fulfill this part of the book structure framework rules..." onchange="updateActPropertyNode('${act.id}','description',this.value)">${escapeHTML(act.description || '')}</textarea></div>
+      <div class="field"><label>Core Climax Event Node / Narrative Shift Turning Metric Objective</label><textarea style="min-height:60px" placeholder="Describe the progression turning benchmarks required to fulfill this part of the book structure framework rules..." oninput="updateActPropertyNode('${act.id}','description',this.value)">${escapeHTML(act.description || '')}</textarea></div>
     `;
     container.appendChild(card);
   });
@@ -1267,8 +1267,8 @@ function renderLocationsDataGrid() {
     div.className = 'location-item';
     
     div.innerHTML = `
-      <input type="text" style="font-weight:500" value="${escapeHTML(loc.name || '')}" placeholder="Setting location label node..." onchange="updateLocationProperties('${loc.id}','name',this.value)" />
-      <input type="text" value="${escapeHTML(loc.details || '')}" placeholder="Atmospheric characteristics notes timeline mapping markers descriptive links details data..." onchange="updateLocationProperties('${loc.id}','details',this.value)" />
+      <input type="text" style="font-weight:500" value="${escapeHTML(loc.name || '')}" placeholder="Setting location label node..." oninput="updateLocationProperties('${loc.id}','name',this.value)" />
+      <input type="text" value="${escapeHTML(loc.details || '')}" placeholder="Atmospheric characteristics notes timeline mapping markers descriptive links details data..." oninput="updateLocationProperties('${loc.id}','details',this.value)" />
       <button class="icon-btn del" onclick="deleteLocationRowLinkNode('${loc.id}')" title="Delete listing row element">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
       </button>
@@ -1713,6 +1713,14 @@ function updateCharProperty(charId, property, value) {
   const ch = n.characters.find(x => x.id === charId);
   if (!ch) return;
   ch[property] = value;
+  saveData();
+}
+  function updateLocationProperties(locId, property, value) {
+  const n = state.novels.find(x => x.id === state.activeNovelId);
+  if (!n) return;
+  const loc = n.locations.find(x => x.id === locId);
+  if (!loc) return;
+  loc[property] = value;
   saveData();
 }
 </script>

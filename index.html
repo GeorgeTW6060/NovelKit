@@ -1166,9 +1166,9 @@ function renderCharactersCardsList() {
         </button>
       </div>
       <div class="row3">
-        <div class="field"><label>Archetype / Role Layout</label><input type="text" value="${escapeHTML(char.role || '')}" placeholder="e.g. Protagonist, Mentor" onchange="updateCharProperty('${char.id}','role',this.value)" /></div>
-        <div class="field"><label>Primary Motivation Driver</label><input type="text" value="${escapeHTML(char.motivation || '')}" placeholder="e.g. Revenge, Survival" onchange="updateCharProperty('${char.id}','motivation',this.value)" /></div>
-        <div class="field"><label>Conflict Boundary Node</label><input type="text" value="${escapeHTML(char.conflict || '')}" placeholder="e.g. Internal doubt, Rivalry" onchange="updateCharProperty('${char.id}','conflict',this.value)" /></div>
+        <div class="field"><label>Role</label><input type="text" value="${escapeHTML(char.role || '')}" placeholder="e.g. Protagonist, Mentor" onchange="updateCharProperty('${char.id}','role',this.value)" /></div>
+        <div class="field"><label>Motivation</label><input type="text" value="${escapeHTML(char.motivation || '')}" placeholder="e.g. Revenge, Survival" onchange="updateCharProperty('${char.id}','motivation',this.value)" /></div>
+        <div class="field"><label>Conflict</label><input type="text" value="${escapeHTML(char.conflict || '')}" placeholder="e.g. Internal doubt, Rivalry" onchange="updateCharProperty('${char.id}','conflict',this.value)" /></div>
       </div>
       <div class="field" style="margin-top:12px"><label>Character Description</label><textarea placeholder="Plot hooks, private files data secrets unknown to the rest of the setting environment ecosystem..." onchange="updateCharProperty('${char.id}','bio',this.value)">${escapeHTML(char.bio || '')}</textarea></div>
     `;
@@ -1209,7 +1209,7 @@ function renderActsLayoutGrid() {
       <div class="act-card-header">
         <div class="act-header">
           <span class="act-num">Block ${idx + 1}</span>
-          <input type="text" class="act-title-input" value="${escapeHTML(act.label || '')}" placeholder="Act milestone grouping definition label reference..." onchange="updateActPropertyNode('${act.id}','label',this.value)" />
+          <input type="text" class="act-title-input" value="${escapeHTML(act.label || '')}" placeholder="Plot Blueprint" onchange="updateActPropertyNode('${act.id}','label',this.value)" />
         </div>
         <button class="icon-btn del" onclick="deleteActNodeBlock('${act.id}')" title="Erase act alignment blueprint structure">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>

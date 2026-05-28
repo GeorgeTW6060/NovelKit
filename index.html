@@ -1160,7 +1160,7 @@ function renderCharactersCardsList() {
     card.innerHTML = `
       <div class="char-header">
         <div class="avatar ${theme}">${silhouette}</div>
-        <input type="text" class="char-name-input" value="${escapeHTML(char.name || '')}" placeholder="Character identity name reference..." oninput="updateCharProperty('${char.id}','name',this.value); renderCharactersCardsList();" />
+        <input type="text" class="char-name-input" value="${escapeHTML(char.name || '')}" placeholder="Character identity name reference..." oninput="updateCharProperty('${char.id}','name',this.value);" />
         <button class="icon-btn del" onclick="deleteCharSheetNode('${char.id}')" title="Remove element profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>

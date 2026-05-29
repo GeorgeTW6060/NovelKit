@@ -8,6 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,400;0,600;1,400&family=DM+Sans:wght=300;400;500&display=swap" rel="stylesheet">
 <!-- DOMPurify for XSS sanitization -->
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+<!-- EPUB Export Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <style>
 :root {
   --bg: #0f0e0c;
@@ -645,6 +648,20 @@ body.focus-mode #tab-write {
       <div>
         <div style="font-weight:500;color:var(--text)">Full Project Backup (.json)</div>
         <div style="font-size:11px;color:var(--text3)">Preserves all details, characters, plots, and settings.</div>
+      </div>
+    </div>
+
+    <!-- EPUB Export Button -->
+    <div class="export-option" id="export-epub-btn" role="button" tabindex="0" style="cursor:pointer">
+      <div class="export-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-weight:500;color:var(--text)">eBook (.epub)</div>
+        <div style="font-size:11px;color:var(--text3)">For Kindle, Apple Books, Kobo</div>
       </div>
     </div>
 
@@ -1819,6 +1836,98 @@ function navigateToChapterEditorDirectly(chId) {
   const writeTab = document.querySelector('.nav-item[data-tab="write"]');
   if (writeTab) switchTab('write', writeTab);
 }
+
+// ============================================================
+// EPUB EXPORT (Simple & Reliable)
+// ============================================================
+
+function exportAsEPUB() {
+  // Check if libraries loaded
+  if (typeof JSZip === 'undefined' || typeof saveAs === 'undefined') {
+    alert('EPUB export libraries not loaded. Please refresh the page.');
+    return;
+  }
+  
+  const novel = state.novels.find(x => x.id === state.activeNovelId);
+  if (!novel) { alert('No novel selected.'); closeModal('export-modal'); return; }
+  
+  try {
+    const zip = new JSZip();
+    const safeTitle = (novel.title || 'Novel').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const uuid = 'epub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    
+    // 1. Mimetype (must be first, uncompressed)
+    zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+    
+    // 2. META-INF/container.xml
+    zip.folder('META-INF').file('container.xml', `<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
+</container>`);
+
+    // 3. Build chapters
+    let manifest = '';
+    let spine = '';
+    let navMap = '';
+    const chapters = novel.chapters || [];
+    
+    chapters.forEach((ch, i) => {
+      const id = `ch${i+1}`;
+      const title = ch.title || `Chapter ${i+1}`;
+      // Strip dangerous tags, keep basic text
+      let content = (ch.content || '').replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+      content = content.replace(/on\w+="[^"]*"/gi, '');
+      
+      // XHTML chapter file
+      zip.folder('OEBPS').file(`${id}.xhtml`, `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>${title}</title><meta charset="UTF-8"/></head>
+<body><h1>${title}</h1><p>${content}</p></body></html>`);
+      
+      // Add to OPF
+      manifest += `<item id="${id}" href="${id}.xhtml" media-type="application/xhtml+xml"/>`;
+      spine += `<itemref idref="${id}"/>`;
+      navMap += `<navPoint id="${id}" playOrder="${i+1}"><navLabel><text>${title}</text></navLabel><content src="${id}.xhtml"/></navPoint>`;
+    });
+
+    // 4. content.opf
+    zip.folder('OEBPS').file('content.opf', `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="uid">urn:uuid:${uuid}</dc:identifier>
+    <dc:title>${novel.title || 'Untitled'}</dc:title>
+    <dc:language>en</dc:language>
+  </metadata>
+  <manifest>${manifest}<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/></manifest>
+  <spine toc="ncx">${spine}</spine>
+</package>`);
+
+    // 5. toc.ncx
+    zip.folder('OEBPS').file('toc.ncx', `<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+<head><meta name="dtb:uid" content="${uuid}"/></head>
+<docTitle><text>${novel.title || 'Untitled'}</text></docTitle>
+<navMap>${navMap}</navMap>
+</ncx>`);
+
+    // Generate & download
+    zip.generateAsync({ type: 'blob', mimeType: 'application/epub+zip' }).then(function(blob) {
+      saveAs(blob, `${safeTitle}.epub`);
+      closeModal('export-modal');
+      announce('Exported as EPUB eBook');
+    }).catch(function(err) {
+      console.error('EPUB generation failed:', err);
+      alert('EPUB export failed. Check console for details.');
+    });
+    
+  } catch (e) {
+    console.error('EPUB export error:', e);
+    alert(`Export failed: ${e.message || 'Unknown error'}`);
+  }
+}
+
+// Attach click handler to the new button
+document.getElementById('export-epub-btn').addEventListener('click', exportAsEPUB);
 </script>
 </body>
 </html>
